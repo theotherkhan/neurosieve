@@ -16,6 +16,8 @@ from numpy import genfromtxt
 
 import glob
 
+import pylab
+
 
 #################################### Noisy neuron numpys ################################### 
 
@@ -161,9 +163,8 @@ from keras import backend as K
 
 from skimage.transform import resize
 
-z_ax = 20
-y_ax = 512
-x_ax = 512
+y_ax = 64
+x_ax = 64
 
 print('-'*70)
 print (" \nWelcome to Part II: Architecture! \n ")
@@ -246,6 +247,7 @@ def make_model():
 def resize_imgs(imgs):
     
     print('\nresizing...')
+
     print("shape of imgs before resize is ", imgs.shape)
 
     imgs_p = np.ndarray((imgs.shape[0], y_ax, x_ax), dtype=np.uint8)
@@ -265,35 +267,58 @@ def resize_imgs(imgs):
 
 def train_and_predict():
 
-    train = allImages[0] 
-    trainTruth = gt[0]     # both truth and train are the same size; checked
+    train = allImages[0:5] #a list of 5, each element is a npy array
+    trainTruth = gt[0:5]   # both truth and train are the same size; checked
 
-    test = allImages[1]   
-    testTruth = gt[1]
+    test = allImages[6:11]   
+    testTruth = gt[6:11]
 
-    #get only 2 layers
+    trainS = []
+    trainTruthS = []
+    testS = []
+    testTruthS = []
 
-    print("Extracting one depth layer from each image...")
-
-    print ( "The depth of the train, test image", len(train[0]), len(test[0]))
-
-    trainTruth = trainTruth[50:51]
-    train = train[50:51]
-    test = test[50:51]
-    testTruth = testTruth[50:51]
-
-    print ("Shapes for train, trainTruth: ", train.shape, trainTruth.shape)
 
     
-    train = resize_imgs(train)
-    trainTruth = resize_imgs(trainTruth)
-    test = resize_imgs(test)
-    testTruth = resize_imgs(testTruth)
+    print("\nExtracting one depth layer from each image...")
+
+    for i in range (0, len(train)):
+        
+        depth = len(train[i])   
+
+        train[i] = train[i][(depth/2)][:][:]
+        trainTruth[i] = trainTruth[i][(depth/2)]
+        test[i] = test[i][(depth/2)]
+        testTruth[i] = testTruth[i][(depth/2)]
+
+        # train, trainTruth, test, testTruth should now contain 5 2D slices each
+
+    print (train[0].shape)
+    print ('')
+    print (train[0][0].shape)
+    print (train[0][0][0].shape)
+
+    '''
+
+    train = resize_imgs(train[0])
+
+
+    print ("Hello")
+    
+    for i in range (0, len(train)):
+
+        train = resize_imgs(train[i])
+        #trainTruth = resize_imgs(trainTruth[i])
+        #test = resize_imgs(test[i])
+        #testTruth = resize_imgs(testTruth[i])
+    
 
     train = train.astype('float32')
     trainTruth = trainTruth.astype('float32')
     test = test.astype('float32')
     testTruth = testTruth.astype('float32')
+
+    
     
     ############## Extra stuff!
 
@@ -316,7 +341,7 @@ def train_and_predict():
     
     #score = model.evaluate(x_test, y_test, verbose=0)
     #print ("\nDone! Score:", score)
-
+    '''
 
 import time
 start_time = time.time()
