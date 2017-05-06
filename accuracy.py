@@ -22,17 +22,16 @@ count = 0
 
 #gt[0][0][:] = 1
 
-#calculate accuracy based on root mean square formula
+#calculate accuracy 
 for i in range(155):
     for j in range(616):    
         if gt[0][i][j] == rawtiff[0][i][j]:
             temp +=1
         count += 1
 
-        divide = temp/count
-        rms = math.sqrt(divide) * 100
-        a = round(rms,2) 
-        accuracy[i] = a
+        a = (temp/count) * 100
+        a2 = round(a,2) 
+        accuracy[i] = a2
                 
 #print(accuracy[3])
 
