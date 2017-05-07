@@ -164,8 +164,8 @@ from keras import backend as K
 
 from skimage.transform import resize
 
-y_ax = 64
-x_ax = 64
+y_ax = 128
+x_ax = 128
 
 print('-'*70)
 print (" \nWelcome to Part II: Architecture! \n ")
@@ -277,20 +277,21 @@ def resize_imgs(imgs):
 def train_and_predict():
 
     
-    train = allImages[0:15] #a list of 5, each element is a npy array
+    train = allImages[0:15] #a list of 15, each element is a npy array
     trainTruth = gt[0:15]   # both truth and train are the same size; checked
 
     test = allImages[15:]   
     testTruth = gt[15:]
 
-    trainLayers = np.empty(shape=(15, 64, 64), dtype=float)
-    trainTruthLayers = np.empty(shape=(15, 64, 64), dtype=float)
-    testLayers = np.empty(shape=(15, 64, 64), dtype=float)
-    testTruthLayers = np.empty(shape=(15, 64, 64), dtype=float)
+    trainLayers = np.empty(shape=(15, 128, 128), dtype=float)
+    trainTruthLayers = np.empty(shape=(15, 128, 128), dtype=float)
+    testLayers = np.empty(shape=(15, 128, 128), dtype=float)
+    testTruthLayers = np.empty(shape=(15, 128, 128), dtype=float)
 
-    radius = 10
+    radius = 15
 
     for i in range (0, len(train)):
+       
         # Getting the fifth layer from each image in train, resizing it, converting to float32
         midSlices = len(train[i])/2
         for j in range(midSlices-radius, midSlices + radius):
@@ -318,17 +319,31 @@ def train_and_predict():
     trainLayers -= mean
     trainLayers /= std
 
-    trainTruthLayers /= 255.0  # scale masks to [0, 1]
+    trainTruthLayers /= 255.0  # scale masks to [0, 1], so that mask respresents a probability map of neuronal classification
 
     ##############
 
-   # model = make_model()
+    model = make_model()
 
     
-
     print ("\nFitting...\n")
 
-    #model.fit(trainLayers, trainTruthLayers, batch_size=4, epochs=20, validation_data=(testLayers, testTruthLayers))
+    model.fit(trainLayers, trainTruthLayers, batch_size=40, epochs=20, validation_data=(testLayers, testTruthLayers))
+
+    image_mask_test = model.predict(testLayers, verbose=1)
+
+    print("this the shape of image_mask_test: ", image_mask_test.shape)
+
+    testMask = np.squeeze(image_mask_test[0])
+
+    print("this the shape of image_mask_test[0]: ", testMask.shape)
+
+    
+    pylab.imshow(testMask)
+    pylab.show(testMask.all)
+    
+    
+
     #score = model.evaluate(testLayers, testTruthLayers, verbose=0)
     #print ("\nDone! Score:", score)
     
