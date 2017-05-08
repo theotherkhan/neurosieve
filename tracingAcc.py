@@ -1,23 +1,13 @@
-############################################################################################# Part I: Data Preprocessing #############################
-# 
-# This part of the program extracts all necessary information fromt the gold166 database of neurons. 
-# Returns an organized directory of tiff files, their numpy representations,
-# and their respective numpy ground truth (trace) files.
-
+################ code to determine accuracy of APP2 tracing when compared to gold standard tracing ##############################
+################ what is needed: the directory pathway of the tif file that was traced, and the corresponding .txt files for the gold standard trace and the app2 trace of that tif image #########
 
 from __future__ import print_function
-
-from PIL import Image
 import numpy as np 
-import PIL
 from skimage import io
-from numpy import genfromtxt
-
 import glob
 
 
-#################################### Getting traces, ground truth files ####################
-
+################ Getting traces, ground truth files ####################
 
 
 # extracts and returns the x,y,z coordinates from swc files for labeled neuron voxels
@@ -35,9 +25,7 @@ def getCoordinates (inputPath):
     coord = np.ndarray(shape=(num_lines,3))
     
     for line in input_file:
-        
-        #print ('Line:', line)
-        
+                
         while (line[0] == '#'): 
             #print ('                   cutting fluff')
             line = next(input_file)
@@ -65,7 +53,6 @@ def getAllCoordinateSets (txtPaths):
     
     print ('    Getting all coordinates...')
 
-
     allTxtPaths = glob.glob(txtPaths)
 
     coordinateSets = []
@@ -73,9 +60,7 @@ def getAllCoordinateSets (txtPaths):
     for i in range (0, len(allTxtPaths)):
         inputPath = allTxtPaths[i]
         c, fluffCount = getCoordinates(inputPath)
-        coordinateSets.append(c)
-        #print (i)
-    
+        coordinateSets.append(c)    
     
     print (' ')
     print ('\nAll coordinates have been grabbed!')
@@ -101,7 +86,6 @@ def get_groundTruths():
     counter = 1
     
     for i in range (0, len(coordSets)):     
-        #print ('Current image shape:', imageShapes[i])
         count = 0
         currGroundTruth = np.zeros((imageShapes[i][0], imageShapes[i][1], imageShapes[i][2]))
         
@@ -111,17 +95,14 @@ def get_groundTruths():
             y = coordSets[i][k][1]
             x = coordSets[i][k][2]
             
-            #print ('z, y, x. ', z, y, x, '. Image dimension: ', imageShapes[i])
             count+=1
             
             currGroundTruth[z][y][x] = 1
        
-    
-        #print ('     Adding ground truth w/ ', count, ' neuron pixels!')
         counter+=1
         groundTruths.append(currGroundTruth)
     
-
+    
     return groundTruths
 
 
@@ -130,98 +111,45 @@ def get_groundTruths():
 # loads multiple tiff image stacks into an array of numpy arrays 
 
 # PUT TIF DIRECTORY PATHWAY HERE: 
-
 pathname = '/Users/Hasan/Desktop/Workspace/CV/Final/tracings/*.tif'
   
 allImagePaths = glob.glob(pathname)
-
 allImages = []
-imageShapes = np.ndarray((2,3))
+imageShapes = np.ndarray((2,3))        
 
 for i in range (0, len(allImagePaths)):
     allImages.append(np.asarray(io.imread(allImagePaths[i])))
     imageShapes[i] = np.asarray(io.imread(allImagePaths[i])).shape
     imageShapes[i+1] = np.asarray(io.imread(allImagePaths[i])).shape
 
-
 # Creates ground truth files:
 gt = get_groundTruths()
 
 print (" \nExtraction Done! A list of images (stored as numpy arrays) is available as allImages[]. \nA list of all ground truths (also stored as numpy arrays) is available as gt[]. \n")
 
-print ("SWC1:", gt[0] , "done")
-print ("SWC2:", gt[1] , "done")
-
-'''
-length = len(gt[0])  #161
-gt0 = gt[0]
-gt1 = gt[1]
-length2 = len(gt0[0][4][:])   #664
+#print ("SWC1:", gt[0] , "done")
+#print ("SWC2:", gt[1] , "done")
 
 
-
-######## count number of one's #########
-ones = 0
-for i in range(length):
-    for j in range(length2):
-
-        if gt1[0][i][j] != 0:
-            ones +=1
-print("number of 1s is: ", ones)
-
-###
-'''
-gtc1 = 0
-gtc2 = 0
-
+###################### DETERMINE ACCURACY OF APP2 TRACE BASED ON THE CREATED NUMPY ARRAYS #######################################
 matched = 0
 total = 0
 sub = 0
 
-
+########## algorithm to compare the gold standard numpy array to the app2 traced numpy array ###########
 for i in range (0, len(gt[0])):
     for k in range (0, len(gt[0][i])):
         for j in range (0, len(gt[0][i][k])):
-            #print(gt[0][i][k][j])
             if (gt[0][i][k][j] != 0 and gt[1][i][k][j] != 0):
                 matched+=1
             if (gt[0][i][k][j] == 0 and gt[1][i][k][j] == 0):
                 sub+=1        
             total+=1
 
-'''
-for i in range (0, len(gt[1])):
-    for k in range (0, len(gt[1][i])):
-        for j in range (0, len(gt[1][i][k])):
-            #print(gt[0][i][k][j])
-            if (gt[1][i][k][j] != 0):
-                gtc2+=1
 
-
-
-
-print ("Counts:", gtc1, gtc2)
-
-
-
-
-
-for i in range (0, len(gt[0])):
-    for k in range (0, len(gt[0][i])):
-        for j in range (0, len(gt[0][i][k])):
-
-            for x in range (0, len(gt[1])):
-                for y in range (0, len(gt[1][x])):
-                    for z in range (0, len(gt[1][x][y])):
-
-                        if gt[0][i][k][j] == gt[1][x][y][z]:
-                            matched += 1
-                        total += 1
-
-'''
-
+#subtrct sub from total (we don't want to consider the empty space in the images in our accuracy calculation)
 acc = float(( float(matched) / float(total-sub)) * 100.0)
-print("matched, total, accuracy:", matched, total, acc)
+print("accuracy:", acc)
 
 
 
